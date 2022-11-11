@@ -1,30 +1,31 @@
 import socket
 import sys
 
+
+
 def debug_prints(s, data, addr):
     print(str(data), addr)
     s.sendto(data.upper(), addr)
 
 
 
-
-
+# TODO: validate arguments through all edge cases
 def validate_args(args):
     return True
 
 
 
-
-
-
+# TODO: validate request through all edge cases
 def validate_request(request):
     return True
 
 
 
-
-
-
+"""
+    Adds an update message to each of the current clients 
+    waiting_update_list of messages.
+    DOES NOT sends it to the client immediately.
+"""
 def update_existing_members(operation_num, operation_info, clients_waiting_updates):
     if operation_num == 1:
         message = operation_info + " has joined"
@@ -35,11 +36,9 @@ def update_existing_members(operation_num, operation_info, clients_waiting_updat
 
 
 
-
-
-
 """
-    Generate list of current members and adds sends it to the client
+    Generate list of current members and sends it immediately
+    to the client.
 """
 def inform_new_client(client_details, sock, client_address):
 
