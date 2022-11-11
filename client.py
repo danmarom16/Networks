@@ -15,11 +15,11 @@ def main():
 
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     
-    
-    operation = input()
-    s.sendto(operation.encode(), ('127.0.0.1', server_port))
-    data, addr = s.recvfrom(1024)
-    print(str(data), addr)
+    while True:
+        operation = input()
+        s.sendto(operation.encode(), ('127.0.0.1', server_port))
+        data, addr = s.recvfrom(1024)
+        print(str(data), addr)
 
     s.close()
 
