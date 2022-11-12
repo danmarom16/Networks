@@ -11,6 +11,7 @@ def debug_prints(s, data, addr):
 
 # TODO: validate arguments through all edge cases
 def validate_args(args):
+
     return True
 
 
@@ -26,17 +27,12 @@ def validate_request(request):
     to the client.
 """
 def inform_new_client(client_details, sock, client_address):
-
-   
+    # TODO : remove current new client from this list
     current_clients = list(client_details.keys())                               # Creates lists of current members
-
-    
     if len(current_clients) != 0:                       
-
-        print(current_clients)
-
-        
         sock.sendto(', '.join(current_clients).encode(), client_address)        # sends the client list to the new client
+    else:
+        sock.sendto(b'', client_address)                                        # sends empy message to client
     
 
 """
@@ -44,7 +40,7 @@ def inform_new_client(client_details, sock, client_address):
 """
 def find_by_adress(client_address, clients_details):
     client_name = [key for key in clients_details.keys() if (clients_details[key] == client_address)]
-    print(client_name)
+    #['dan'] -> 'dan'
     return client_name
 
 
@@ -72,7 +68,7 @@ def update_members(operation_num, operation_info, waiting_updates, client_name):
     if operation_num == 1:                                                          # in this case operation_info = name
         message = operation_info + " has joined"
     elif operation_num == 2:                                                        # in this case operation_info = Message
-        message = client_name +  operation_info
+        message = client_name + ": " +  operation_info
     elif operation_num == 3:                                                        # in this case operation_info = New Name
         message = client_name + " changed his name to " + operation_info
     elif operation_num == 4:                                                        # in this case operation_info = ""
@@ -83,9 +79,6 @@ def update_members(operation_num, operation_info, waiting_updates, client_name):
     for client in waiting_updates:                                                  # iterate through all clients and add the
         if client != client_name and message != ERROR_MSG:
             waiting_updates[client].append(message)                                 # message to their waiting updates
-
-
-
 
 
 
@@ -104,10 +97,10 @@ def handle_client_request(request, address, details, waiting_updates, sock):
         operation_num = int(splitted_request[0])
 
 
-    if operation_num == 1 :                                 # in this case operation_info = name
+    if operation_num == 1 :                               # in this case operation_info = name
+        inform_new_client(details, sock, address)
         details[operation_info] = address                   # save client info the current members list:
         waiting_updates[operation_info] = list()            # Create a new record for future messages:
-        inform_new_client(details, sock, address)
         update_members(operation_num, operation_info, waiting_updates, operation_info)
 
     elif operation_num == 2:                                # in this case operation_info = Message
@@ -128,13 +121,14 @@ def handle_client_request(request, address, details, waiting_updates, sock):
     elif operation_num == 5:                                # in this case we dont have operation info
         name = find_by_adress(address)
         sock.sendto('\n'.join(waiting_updates[name]).encode, address)
+        waiting_updates[name] = list()                      # initialize his list to an empty one
 
 
 
 def main():
 
     details = dict()                                # contains mapping {name -> (client_ip, client_port)}
-    waiting_updates = dict()                        # contains mapping {(name, ip, port) -> [waiting_updates] }
+    waiting_updates = dict()                        # contains mapping {name -> [waiting_updates]}
     
     if not(validate_args(sys.argv)):
         exit()
@@ -144,12 +138,11 @@ def main():
     s.bind(('', my_port))
 
     while True:
-        request, address = s.recvfrom(1024)
+        request, address = s.recvfrom(1024) 
         if not(validate_request(request)):
-            print("Ilegal request")
-            continue
+            print("Ilegal request") # change to sendto
         else:
-            handle_client_request(request, address,details, waiting_updates, s)
+            handle_client_request(request, address, details, waiting_updates, s)
 
 
 if __name__ == "__main__":

@@ -1,7 +1,6 @@
 import socket
 import sys
 
-    
 
 def validate_args(args):
     return True
@@ -21,9 +20,8 @@ def main():
         operation = input()
         s.sendto(operation.encode(), (server_ip, server_port))
         
-        if operation != '1':
-            data, addr = s.recvfrom(1024)
-            print(bytes.decode(data))
+        data, addr = s.recvfrom(1024)
+        print(bytes.decode(data))
         # debugg -> print(str(data), addr)
         
 
