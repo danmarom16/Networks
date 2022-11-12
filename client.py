@@ -17,13 +17,15 @@ def main():
 
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     
-    #while True:
-    operation = input()
-    s.sendto(operation.encode(), (server_ip, server_port))
-    
-    data, addr = s.recvfrom(1024)
-    # debugg -> print(str(data), addr)
-    print(bytes.decode(data))
+    while True:
+        operation = input()
+        s.sendto(operation.encode(), (server_ip, server_port))
+        
+        if operation != '1':
+            data, addr = s.recvfrom(1024)
+            print(bytes.decode(data))
+        # debugg -> print(str(data), addr)
+        
 
     s.close()
 
