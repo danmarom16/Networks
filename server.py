@@ -48,6 +48,9 @@ def find_by_adress(client_address, clients_details):
     return client_name
 
 
+"""
+    Changes client name from the current name to a new one
+"""
 def change_name(waiting_updates, details ,current_name, new_name):
 
     # Assign the address of old client name to his new name as a new pair in the dict, and then delete the old one
@@ -77,9 +80,9 @@ def update_members(operation_num, operation_info, waiting_updates, client_name):
     else:
         message = ERROR_MSG
 
-    for client in waiting_updates:                                          # iterate through all clients and add the
+    for client in waiting_updates:                                                  # iterate through all clients and add the
         if client != client_name and message != ERROR_MSG:
-            waiting_updates[client].append(message)                         # message to their waiting updates
+            waiting_updates[client].append(message)                                 # message to their waiting updates
 
 
 
@@ -102,8 +105,8 @@ def handle_client_request(request, address, details, waiting_updates, sock):
 
 
     if operation_num == 1 :                                 # in this case operation_info = name
-        details[operation_info] = address    # save client info the current members list:
-        waiting_updates[operation_info] = list()    # Create a new record for future messages:
+        details[operation_info] = address                   # save client info the current members list:
+        waiting_updates[operation_info] = list()            # Create a new record for future messages:
         inform_new_client(details, sock, address)
         update_members(operation_num, operation_info, waiting_updates, operation_info)
 
@@ -125,32 +128,28 @@ def handle_client_request(request, address, details, waiting_updates, sock):
     elif operation_num == 5:                                # in this case we dont have operation info
         name = find_by_adress(address)
         sock.sendto('\n'.join(waiting_updates[name]).encode, address)
-        
+
 
 
 def main():
 
-    
     details = dict()                                # contains mapping {name -> (client_ip, client_port)}
-
-   
     waiting_updates = dict()                        # contains mapping {(name, ip, port) -> [waiting_updates] }
-
+    
     if not(validate_args(sys.argv)):
         exit()
 
     my_port = int(sys.argv[1])
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.bind(('', my_port))
+
     while True:
         request, address = s.recvfrom(1024)
         if not(validate_request(request)):
             print("Ilegal request")
             continue
         else:
-            handle_client_request(request, address,
-            details, waiting_updates, s)
-
+            handle_client_request(request, address,details, waiting_updates, s)
 
 
 if __name__ == "__main__":
