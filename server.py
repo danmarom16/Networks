@@ -32,7 +32,7 @@ def inform_new_client(client_details, sock, client_address):
     if len(current_clients) != 0:                       
         sock.sendto(', '.join(current_clients).encode(), (client_address[0], client_address[1]))        # sends the client list to the new client
     else:
-        sock.sendto(b'', client_address)                                        # sends empy message to client
+        sock.sendto(b'', (client_address[0], client_address[1]))                                        # sends empy message to client
     
 
 """
@@ -105,17 +105,21 @@ def handle_client_request(request, address, details, waiting_updates, sock):
     elif operation_num == 2:                                # in this case operation_info = Message
         name = find_by_adress(address, details)
         update_members(operation_num, operation_info, waiting_updates, name)
+        sock.sendto(b'', (address[0], address[1]))
+
 
     elif operation_num == 3:                                # in this case operation_info = New Name
         current_name = find_by_adress(address, details)
         change_name(waiting_updates, details ,current_name, operation_info)
         update_members(operation_num, operation_info, waiting_updates, current_name)
+        sock.sendto(b'', (address[0], address[1]))
     
     elif operation_num == 4:                                # in this case we dont have operation info
         to_remove_name = find_by_adress(address, details)
         del details[to_remove_name]
-        del waiting_updates
+        del waiting_updates[to_remove_name]
         update_members(operation_num, operation_info, waiting_updates, to_remove_name)
+        sock.sendto(b'', (address[0], address[1]))
 
     elif operation_num == 5:                                # in this case we dont have operation info
         name = find_by_adress(address, details)
