@@ -69,8 +69,8 @@ def update_members(operation_num, operation_info, waiting_updates, client_name):
         message = operation_info + " has joined"
     elif operation_num == 2:                                                        # in this case operation_info = Message
         message = client_name + ": " +  operation_info
-    elif operation_num == 3:                                                        # in this case operation_info = New Name
-        message = client_name + " changed his name to " + operation_info
+    elif operation_num == 3:                                                        # in this case client_name = New Name and operation_info = old name
+        message = operation_info + " changed his name to " + client_name
     elif operation_num == 4:                                                        # in this case operation_info = ""
         message = client_name + " has left the group"
     else:
@@ -87,7 +87,7 @@ def update_members(operation_num, operation_info, waiting_updates, client_name):
 """
 def handle_client_request(request, address, details, waiting_updates, sock):
 
-    splitted_request = bytes.decode(request).split()    # takes client request and breaks it down do matching                                                     
+    splitted_request = bytes.decode(request).split(' ',1)    # takes client request and breaks it down do matching                                                     
     operation_info = ""                                 # parameters for readability
 
     if len(splitted_request) == 2:
@@ -111,7 +111,7 @@ def handle_client_request(request, address, details, waiting_updates, sock):
     elif operation_num == 3:                                # in this case operation_info = New Name
         current_name = find_by_adress(address, details)
         change_name(waiting_updates, details ,current_name, operation_info)
-        update_members(operation_num, operation_info, waiting_updates, current_name)
+        update_members(operation_num, current_name, waiting_updates, operation_info)
         sock.sendto(b'', (address[0], address[1]))
     
     elif operation_num == 4:                                # in this case we dont have operation info
@@ -123,7 +123,8 @@ def handle_client_request(request, address, details, waiting_updates, sock):
 
     elif operation_num == 5:                                # in this case we dont have operation info
         name = find_by_adress(address, details)
-        sock.sendto('\n'.join(waiting_updates[name]).encode(), (address[0], address[1]))
+        messages = waiting_updates[name]
+        sock.sendto('\n'.join(messages).encode(), (address[0], address[1]))
         waiting_updates[name] = list()                      # initialize his list to an empty one
 
 def main():
