@@ -18,16 +18,19 @@ def validate_args(args):
 
 
 def validate_request(request):
-    splitted_request = bytes.decode(request).split(' ', 1)         # takes client request and breaks it down do matching
-    if not(splitted_request[0].isdigit()):
-        return False
+    splitted_request = bytes.decode(request).split(' ', 1)               # takes client request and breaks it down do matching
+    operation_info = ""                                                  # parameters for readability
     if len(splitted_request) == 2:
-        if not(int(splitted_request[0]) in range(1, 4)):
+        if not (splitted_request[0].isdigit()):
+            return False
+        elif not (int(splitted_request[0]) in range(1, 4)):
             return False
         else:
             return True
     elif len(splitted_request) == 1:
-        if not (int(splitted_request[0]) in range(4, 6)):
+        if not (splitted_request[0].isdigit()):
+            return False
+        elif not (int(splitted_request[0]) in range(4, 6)):
             return False
         else:
             return True
@@ -35,11 +38,11 @@ def validate_request(request):
         return False
 
 
-def check_if_registered(name):
-    if name is None:
-        return False
-    else:
+def check_if_registered(name, logged_users):
+    if name in logged_users:
         return True
+    else:
+        return False
 
 """
     Generate list of current members and sends it immediately
@@ -59,7 +62,7 @@ def find_by_adress(client_address, clients_details):
     client_name = [key for key in clients_details.keys() if (clients_details[key] == client_address)]
 
     # in case the client is not registered
-    if not client_name:
+    if len(client_name) == 0:
         return None
     return client_name[0]
 
@@ -104,6 +107,25 @@ def update_members(operation_num, operation_info, waiting_updates, client_name):
             waiting_updates[client].append(message)                                 # message to their waiting updates
 
 
+def push_messages(waiting_updates, name, address, sock):
+    messages = waiting_updates[name]
+    if len(messages) != 0:
+        sock.sendto('\n'.join(waiting_updates[name]).encode(), (address[0], address[1]))
+        waiting_updates[name] = list()                  # initialize his list to an empty one
+    else:
+        sock.sendto(b'', (address[0], address[1]))
+        
+
+
+def delete_user(details, waiting_updates, to_remove_name, logged_users):
+    del details[to_remove_name]
+    del waiting_updates[to_remove_name]
+    logged_users.remove(to_remove_name)
+
+def save_client(operation_info, address, waiting_updates, details, logged_users):
+    logged_users.insert(0, operation_info)              # inseart to the beggining of the list
+    details[operation_info] = address                   # save client info the current members list:
+    waiting_updates[operation_info] = list()            # Create a new record for future messages:
 
 """
     Handles the client request based on the operation number.
@@ -125,48 +147,40 @@ def handle_client_request(request, address, details,
             sock.sendto(b'Illegal request', (address[0], address[1]))
         else:
             inform_new_client(logged_users, sock, address)
-            logged_users.insert(0, operation_info)              # inseart to the beggining of the list
-            details[operation_info] = address                   # save client info the current members list:
-            waiting_updates[operation_info] = list()            # Create a new record for future messages:
+            save_client(operation_info, address, waiting_updates, details, logged_users)
             update_members(operation_num, operation_info, waiting_updates, operation_info)
 
     elif operation_num == 2:                                # in this case operation_info = Message
         name = find_by_adress(address, details)
-        if not check_if_registered(name):
+        if not check_if_registered(name, logged_users):
             sock.sendto(b'Illegal request', (address[0], address[1]))
         else:
             update_members(operation_num, operation_info, waiting_updates, name)
-            sock.sendto(b'', (address[0], address[1]))
+            push_messages(waiting_updates, name, address, sock)
 
     elif operation_num == 3:                                # in this case operation_info = New Name
         current_name = find_by_adress(address, details)
-        if not check_if_registered(current_name):
+        if not check_if_registered(current_name, logged_users):
             sock.sendto(b'Illegal request', (address[0], address[1]))
         else:
             change_name(waiting_updates, details, current_name, operation_info, logged_users)
-            print(logged_users)
             update_members(operation_num, current_name, waiting_updates, operation_info)
-            sock.sendto(b'', (address[0], address[1]))
+            push_messages(waiting_updates, operation_info, address, sock)
     
     elif operation_num == 4:                                # in this case we dont have operation info
         to_remove_name = find_by_adress(address, details)
-        if not check_if_registered(to_remove_name):
+        if not check_if_registered(to_remove_name, logged_users):
             sock.sendto(b'Illegal request', (address[0], address[1]))
         else:
-            del details[to_remove_name]
-            del waiting_updates[to_remove_name]
-            logged_users.remove(to_remove_name)
-
+            delete_user(details, waiting_updates, to_remove_name, logged_users)
             update_members(operation_num, operation_info, waiting_updates, to_remove_name)
-            sock.sendto(b'', (address[0], address[1]))
 
     elif operation_num == 5:                                # in this case we dont have operation info
         name = find_by_adress(address, details)
-        if not check_if_registered(name):
+        if not check_if_registered(name, logged_users):
             sock.sendto(b'Illegal request', (address[0], address[1]))
         else:
-            sock.sendto('\n'.join(waiting_updates[name]).encode(), (address[0], address[1]))
-            waiting_updates[name] = list()                  # initialize his list to an empty one
+            push_messages(waiting_updates, name, address, sock)
 
 
 def main():
@@ -184,6 +198,7 @@ def main():
 
     while True:
         request, address = s.recvfrom(1024)
+        print(address)
         if not(validate_request(request)):
             s.sendto(b'Illegal request', (address[0], address[1]))
         else:
