@@ -1,8 +1,27 @@
 import socket
 import sys
 
+MIN_PORT = 0
+MAX_PORT = 65536
 
 def validate_args(args):
+
+    if not(len(args) == 2):
+        print("Ilegal number of argument")
+        return False
+
+    port_num = 0
+    
+    try:
+        port_num =  int(port_num)
+    except:
+        print("Port number must be a number")
+        return False
+
+    if port_num <= MIN_PORT or port_num >= MAX_PORT:
+        print("Invalid port number")
+        return False
+    
     return True
 
 
