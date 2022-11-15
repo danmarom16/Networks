@@ -18,19 +18,16 @@ def validate_args(args):
 
 
 def validate_request(request):
-    splitted_request = bytes.decode(request).split(' ', 1)               # takes client request and breaks it down do matching
-    operation_info = ""                                            # parameters for readability
+    splitted_request = bytes.decode(request).split(' ', 1)         # takes client request and breaks it down do matching
+    if not(splitted_request[0].isdigit()):
+        return False
     if len(splitted_request) == 2:
-        if not (splitted_request[0].isdigit()):
-            return False
-        elif not (int(splitted_request[0]) in range(1, 4)):
+        if not(int(splitted_request[0]) in range(1, 4)):
             return False
         else:
             return True
     elif len(splitted_request) == 1:
-        if not (splitted_request[0].isdigit()):
-            return False
-        elif not (int(splitted_request[0]) in range(4, 6)):
+        if not (int(splitted_request[0]) in range(4, 6)):
             return False
         else:
             return True
@@ -41,6 +38,8 @@ def validate_request(request):
 def check_if_registered(name):
     if name is None:
         return False
+    else:
+        return True
 
 """
     Generate list of current members and sends it immediately
@@ -133,7 +132,7 @@ def handle_client_request(request, address, details,
 
     elif operation_num == 2:                                # in this case operation_info = Message
         name = find_by_adress(address, details)
-        if not check_if_registered(name, logged_users):
+        if not check_if_registered(name):
             sock.sendto(b'Illegal request', (address[0], address[1]))
         else:
             update_members(operation_num, operation_info, waiting_updates, name)
@@ -141,7 +140,7 @@ def handle_client_request(request, address, details,
 
     elif operation_num == 3:                                # in this case operation_info = New Name
         current_name = find_by_adress(address, details)
-        if not check_if_registered(current_name, logged_users):
+        if not check_if_registered(current_name):
             sock.sendto(b'Illegal request', (address[0], address[1]))
         else:
             change_name(waiting_updates, details, current_name, operation_info, logged_users)
@@ -151,7 +150,7 @@ def handle_client_request(request, address, details,
     
     elif operation_num == 4:                                # in this case we dont have operation info
         to_remove_name = find_by_adress(address, details)
-        if not check_if_registered(to_remove_name, logged_users):
+        if not check_if_registered(to_remove_name):
             sock.sendto(b'Illegal request', (address[0], address[1]))
         else:
             del details[to_remove_name]
@@ -163,7 +162,7 @@ def handle_client_request(request, address, details,
 
     elif operation_num == 5:                                # in this case we dont have operation info
         name = find_by_adress(address, details)
-        if not check_if_registered(name, logged_users):
+        if not check_if_registered(name):
             sock.sendto(b'Illegal request', (address[0], address[1]))
         else:
             sock.sendto('\n'.join(waiting_updates[name]).encode(), (address[0], address[1]))
@@ -185,7 +184,6 @@ def main():
 
     while True:
         request, address = s.recvfrom(1024)
-        print(address)
         if not(validate_request(request)):
             s.sendto(b'Illegal request', (address[0], address[1]))
         else:
