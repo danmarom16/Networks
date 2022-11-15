@@ -18,19 +18,16 @@ def validate_args(args):
 
 
 def validate_request(request):
-    splitted_request = bytes.decode(request).split()               # takes client request and breaks it down do matching
-    operation_info = ""                                            # parameters for readability
-    if len(splitted_request) == 2:
-        if not (splitted_request[0].isdigit()):
-            return False
-        elif not (int(splitted_request[0]) in range(1, 4)):
+    splitted_request = bytes.decode(request).split(' ', 1)         # takes client request and breaks it down do matching
+    if not splitted_request[0].isdigit():
+        return False
+    elif len(splitted_request) == 2:
+        if not(int(splitted_request[0]) in range(1, 4)):
             return False
         else:
             return True
     elif len(splitted_request) == 1:
-        if not (splitted_request[0].isdigit()):
-            return False
-        elif not (int(splitted_request[0]) in range(4, 6)):
+        if not(int(splitted_request[0]) in range(4, 6)):
             return False
         else:
             return True
