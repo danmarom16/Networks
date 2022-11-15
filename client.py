@@ -3,7 +3,12 @@ import sys
 
 
 def validate_args(args):
-    return True
+    if not(sys.argv[2].isnumeric()):
+        return False
+    if int(sys.argv[2]) in range(1, 65535):
+        return True
+    else:
+        return False
 
 
 def main():
