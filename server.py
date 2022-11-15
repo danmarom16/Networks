@@ -8,19 +8,15 @@ def debug_prints(s, data, addr):
     s.sendto(data.upper(), addr)
 
 
-
-# TODO: validate arguments through all edge cases
 def validate_args(args):
     if not(sys.argv[1].isnumeric()):
         return False
-    if int(sys.argv[1]) in range(1, 65535):
+    if int(sys.argv[1]) in range(1, 65536):
         return True
     else:
         return False
 
 
-
-# TODO: validate request through all edge cases
 def validate_request(request):
     splitted_request = bytes.decode(request).split()               # takes client request and breaks it down do matching
     operation_info = ""                                            # parameters for readability
@@ -41,6 +37,7 @@ def validate_request(request):
     else:
         return False
 
+
 def check_if_registered(name):
     if name is None:
         return False
@@ -57,7 +54,7 @@ def inform_new_client(client_details, sock, client_address):
     if len(current_clients) != 0:                       
         sock.sendto(', '.join(current_clients).encode(), (client_address[0], client_address[1]))
     else:
-        sock.sendto('', (client_address[0], client_address[1]))
+        sock.sendto(b'', (client_address[0], client_address[1]))
     
 
 """
@@ -167,6 +164,7 @@ def handle_client_request(request, address, details, waiting_updates, sock):
         else:
             sock.sendto('\n'.join(waiting_updates[name]).encode(), (address[0], address[1]))
             waiting_updates[name] = list()                  # initialize his list to an empty one
+
 
 def main():
 
